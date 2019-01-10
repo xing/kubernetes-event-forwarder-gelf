@@ -12,4 +12,4 @@ test:
 	go test ./...
 
 image:
-	docker build -t xingarchitects/event-forwarder-gelf .
+	docker build -t xingse/event-forwarder-gelf .
