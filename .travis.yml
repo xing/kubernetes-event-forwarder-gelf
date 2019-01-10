@@ -1,5 +1,10 @@
-language: go
-go:
-  - "1.11.x"
-  - master
-script: env GO111MODULE=on make test
+sudo: required
+services:
+  - docker
+script:
+  - make image
+after_success:
+  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then
+      docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD ;
+      make push-image ;
+    fi

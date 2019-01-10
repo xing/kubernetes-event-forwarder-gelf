@@ -1,4 +1,6 @@
-.PHONY: install
+.PHONY: install clean test image push-image
+
+IMAGE := xingse/event-forwarder-gelf
 
 all: event-forwarder-gelf
 
@@ -9,7 +11,10 @@ clean:
 	go clean ./...
 
 test:
-	go test ./...
+	go test -v ./...
 
 image:
-	docker build -t xingse/event-forwarder-gelf .
+	docker build -t $(IMAGE) .
+
+push-image:
+	docker push $(IMAGE)
