@@ -1,6 +1,6 @@
 # kubernetes-event-forwarder-gelf
 
-[![Build Status](https://travis-ci.org/xing/event-forwarder-gelf.svg?branch=master)](https://travis-ci.org/xing/event-forwarder-gelf)
+[![Build Status](https://travis-ci.org/xing/kubernetes-event-forwarder-gelf.svg?branch=master)](https://travis-ci.org/xing/kubernetes-event-forwarder-gelf)
 
 Forward Kubernetes Events using the Graylog Extended Log Format.
 
