@@ -89,6 +89,8 @@ func (c *Controller) log(event *core.Event) {
 			"kind":           event.InvolvedObject.Kind,
 			"namespace_name": event.InvolvedObject.Namespace,
 			"pod_name":       event.InvolvedObject.Name,
+			"event_type":     event.Type,
+			"event_reason":   event.Reason,
 		},
 	}
 
