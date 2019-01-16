@@ -14,6 +14,7 @@ Forward Kubernetes Events using the Graylog Extended Log Format.
           --host=    Graylog TCP endpoint host [$GRAYLOG_HOST]
           --port=    Graylog TCP endpoint port [$GRAYLOG_PORT]
           --cluster= Name of this cluster [$CLUSTER]
+          --version  Print version information
 
     Help Options:
       -h, --help     Show this help message
@@ -62,3 +63,16 @@ mod tidy` after updating dependencies.
 
 [`xingse/event-forwarder-gelf`]: https://hub.docker.com/r/xingse/event-forwarder-gelf
 [go-modules]: https://github.com/golang/go/wiki/Modules
+
+### Releases
+
+Releases are a two-step process, beginning with a manual step:
+
+* Create a release commit
+  * Increase the version number in [event-forwarder-gelf.go/VERSION](event-forwarder-gelf.go#L13)
+  * Adjust the [CHANGELOG](CHANGELOG.md)
+* Run `make release`, which will create an image, retrieve the version from the
+  binary, create a git tag and push both your commit and the tag
+
+The Travis CI run will then realize that the current tag refers to the current master commit and
+will tag the built docker image accordingly.
