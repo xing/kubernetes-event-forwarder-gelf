@@ -80,7 +80,7 @@ func (c *Controller) log(event *core.Event) {
 		Level:    mapEventTypeToGelfLevel(event),
 		Host:     c.host,
 		Short:    event.Message,
-		TimeUnix: float64(event.CreationTimestamp.Unix()),
+		TimeUnix: float64(event.LastTimestamp.Unix()),
 		Extra: map[string]interface{}{
 			"cluster":        c.cluster,
 			"component":      event.Source.Component,
