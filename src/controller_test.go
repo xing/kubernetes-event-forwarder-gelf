@@ -49,13 +49,85 @@ func TestWriteMessage(t *testing.T) {
 	assert.Equal(t, []string{"WriteMessage"}, dummy(c).calls)
 }
 
+func TestWriteMessageFromUpdate(t *testing.T) {
+	c := controller()
+
+	go func() {
+		time.Sleep(time.Millisecond * 100)
+		meta := metav1.ObjectMeta{CreationTimestamp: metav1.Time{Time: time.Now()}}
+		c.eventUpdatedCh <- &eventUpdateGroup{
+			oldEvent: &core.Event{
+				ObjectMeta: meta,
+				Reason:     "Foo",
+				Count:      1,
+			},
+			newEvent: &core.Event{
+				ObjectMeta:    meta,
+				Reason:        "Foo",
+				Count:         2,
+				LastTimestamp: metav1.Time{Time: time.Now()},
+			},
+		}
+		c.Stop <- struct{}{}
+	}()
+	c.Run()
+
+	assert.Equal(t, []string{"WriteMessage", "Close"}, dummy(c).calls)
+}
+
+func TestSkipMessageFromUpdateDueToEquality(t *testing.T) {
+	c := controller()
+
+	go func() {
+		time.Sleep(time.Millisecond * 100)
+		meta := metav1.ObjectMeta{CreationTimestamp: metav1.Time{Time: time.Now()}}
+		event := &core.Event{
+			ObjectMeta:    meta,
+			Reason:        "Foo",
+			Count:         1,
+			LastTimestamp: metav1.Time{Time: time.Now()},
+		}
+		c.eventUpdatedCh <- &eventUpdateGroup{
+			oldEvent: event,
+			newEvent: event,
+		}
+		c.Stop <- struct{}{}
+	}()
+	c.Run()
+
+	assert.Equal(t, []string{"Close"}, dummy(c).calls)
+}
+
+func TestSkipMessageFromUpdateDueToNewness(t *testing.T) {
+	c := controller()
+
+	go func() {
+		time.Sleep(time.Millisecond * 100)
+		meta := metav1.ObjectMeta{CreationTimestamp: metav1.Time{Time: time.Now()}}
+		event := &core.Event{
+			ObjectMeta:    meta,
+			Reason:        "Foo",
+			Count:         1,
+			LastTimestamp: metav1.Time{Time: time.Now()},
+		}
+		c.eventUpdatedCh <- &eventUpdateGroup{
+			oldEvent: nil,
+			newEvent: event,
+		}
+		c.Stop <- struct{}{}
+	}()
+	c.Run()
+
+	assert.Equal(t, []string{"Close"}, dummy(c).calls)
+}
+
 func TestStopWithError(t *testing.T) {
 	c := controller()
 	dummy(c).err = errors.New("dummy")
 
 	go func() {
 		time.Sleep(time.Millisecond * 100)
-		c.eventCh <- &core.Event{ObjectMeta: metav1.ObjectMeta{CreationTimestamp: metav1.Time{Time: time.Now()}}}
+		c.eventAddedCh <- &core.Event{ObjectMeta: metav1.ObjectMeta{CreationTimestamp: metav1.Time{Time: time.Now()}}}
 	}()
 	c.Run()
 
@@ -64,12 +136,13 @@ func TestStopWithError(t *testing.T) {
 
 func controller() *Controller {
 	return &Controller{
-		eventCh:    make(chan *core.Event),
-		host:       "",
-		k8sFactory: &dummyK8sFactory{},
-		Stop:       make(chan struct{}),
-		stopCh:     make(chan struct{}),
-		writer:     &dummyWriter{},
+		eventAddedCh:   make(chan *core.Event),
+		eventUpdatedCh: make(chan *eventUpdateGroup),
+		host:           "",
+		k8sFactory:     &dummyK8sFactory{},
+		Stop:           make(chan struct{}),
+		stopCh:         make(chan struct{}),
+		writer:         &dummyWriter{},
 	}
 }
 
