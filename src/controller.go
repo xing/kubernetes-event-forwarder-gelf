@@ -1,6 +1,7 @@
 package src
 
 import (
+	"reflect"
 	"time"
 
 	"github.com/golang/glog"
@@ -17,12 +18,18 @@ import (
 type Controller struct {
 	Stop chan struct{}
 
-	cluster    string
-	eventCh    chan *core.Event
-	host       string
-	k8sFactory informers.SharedInformerFactory
-	stopCh     chan struct{}
-	writer     gelf.Writer
+	cluster        string
+	eventAddedCh   chan *core.Event
+	eventUpdatedCh chan *eventUpdateGroup
+	host           string
+	k8sFactory     informers.SharedInformerFactory
+	stopCh         chan struct{}
+	writer         gelf.Writer
+}
+
+type eventUpdateGroup struct {
+	oldEvent *core.Event
+	newEvent *core.Event
 }
 
 // NewController instanciates a new class of Controller
@@ -32,13 +39,14 @@ func NewController(writer gelf.Writer, cluster string) *Controller {
 	host, _ := util.GetFQDN()
 
 	controller := &Controller{
-		cluster:    cluster,
-		eventCh:    make(chan *core.Event),
-		host:       host,
-		k8sFactory: k8sFactory,
-		Stop:       make(chan struct{}),
-		stopCh:     make(chan struct{}),
-		writer:     writer,
+		cluster:        cluster,
+		eventAddedCh:   make(chan *core.Event),
+		eventUpdatedCh: make(chan *eventUpdateGroup),
+		host:           host,
+		k8sFactory:     k8sFactory,
+		Stop:           make(chan struct{}),
+		stopCh:         make(chan struct{}),
+		writer:         writer,
 	}
 
 	eventsInformer := informers.SharedInformerFactory(k8sFactory).Core().V1().Events().Informer()
@@ -46,7 +54,13 @@ func NewController(writer gelf.Writer, cluster string) *Controller {
 		AddFunc: func(obj interface{}) {
 			event := obj.(*core.Event)
 			glog.V(2).Infof("got event %s/%s", event.ObjectMeta.Namespace, event.ObjectMeta.Name)
-			controller.eventCh <- event
+			controller.eventAddedCh <- event
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			controller.eventUpdatedCh <- &eventUpdateGroup{
+				oldEvent: oldObj.(*core.Event),
+				newEvent: newObj.(*core.Event),
+			}
 		},
 	})
 
@@ -62,15 +76,33 @@ func (c *Controller) Run() {
 func (c *Controller) updateLoop() {
 	for {
 		select {
-		case event := <-c.eventCh:
+		case event := <-c.eventAddedCh:
 			if isLoggable(event) {
 				c.log(event)
 			}
+		case eventUpdate := <-c.eventUpdatedCh:
+			c.evaluateEventUpdate(eventUpdate)
 		case stop := <-c.Stop:
 			c.stopCh <- stop
 			c.writer.Close()
 			return
 		}
+	}
+}
+
+func (c *Controller) evaluateEventUpdate(g *eventUpdateGroup) {
+	if !isLoggable(g.newEvent) {
+		return
+	}
+	if g.oldEvent == nil {
+		return
+	}
+	if reflect.DeepEqual(g.oldEvent, g.newEvent) {
+		return
+	}
+	if g.oldEvent.Count < g.newEvent.Count {
+		glog.V(3).Infof("observed updated event %s/%s (count: %d)", g.newEvent.ObjectMeta.Namespace, g.newEvent.ObjectMeta.Name, g.newEvent.Count)
+		c.log(g.newEvent)
 	}
 }
 
