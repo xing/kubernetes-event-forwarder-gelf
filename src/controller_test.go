@@ -23,10 +23,14 @@ import (
 	"k8s.io/client-go/informers/extensions"
 	"k8s.io/client-go/informers/internalinterfaces"
 	"k8s.io/client-go/informers/networking"
+	"k8s.io/client-go/informers/coordination"
+        "k8s.io/client-go/informers/discovery"
+        "k8s.io/client-go/informers/node"
+	"k8s.io/client-go/informers/flowcontrol"
+        "k8s.io/client-go/informers/apiserverinternal"
 	"k8s.io/client-go/informers/policy"
 	"k8s.io/client-go/informers/rbac"
 	"k8s.io/client-go/informers/scheduling"
-	"k8s.io/client-go/informers/settings"
 	"k8s.io/client-go/informers/storage"
 	"k8s.io/client-go/tools/cache"
 )
@@ -175,18 +179,22 @@ type dummyK8sFactory struct{}
 func (d *dummyK8sFactory) Start(ch <-chan struct{})                                      { go func() { <-ch }() }
 func (d *dummyK8sFactory) WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool { return nil }
 func (d *dummyK8sFactory) Admissionregistration() admissionregistration.Interface        { return nil }
+func (d *dummyK8sFactory) Internal() apiserverinternal.Interface                         { return nil }
 func (d *dummyK8sFactory) Apps() apps.Interface                                          { return nil }
 func (d *dummyK8sFactory) Autoscaling() autoscaling.Interface                            { return nil }
 func (d *dummyK8sFactory) Batch() batch.Interface                                        { return nil }
 func (d *dummyK8sFactory) Certificates() certificates.Interface                          { return nil }
+func (d *dummyK8sFactory) Coordination() coordination.Interface                          { return nil }
 func (d *dummyK8sFactory) Core() informers_core.Interface                                { return nil }
+func (d *dummyK8sFactory) Discovery() discovery.Interface                                { return nil }
 func (d *dummyK8sFactory) Events() events.Interface                                      { return nil }
 func (d *dummyK8sFactory) Extensions() extensions.Interface                              { return nil }
+func (d *dummyK8sFactory) Flowcontrol() flowcontrol.Interface                            { return nil }
 func (d *dummyK8sFactory) Networking() networking.Interface                              { return nil }
+func (d *dummyK8sFactory) Node() node.Interface                                          { return nil }
 func (d *dummyK8sFactory) Policy() policy.Interface                                      { return nil }
 func (d *dummyK8sFactory) Rbac() rbac.Interface                                          { return nil }
 func (d *dummyK8sFactory) Scheduling() scheduling.Interface                              { return nil }
-func (d *dummyK8sFactory) Settings() settings.Interface                                  { return nil }
 func (d *dummyK8sFactory) Storage() storage.Interface                                    { return nil }
 func (d *dummyK8sFactory) ForResource(resource schema.GroupVersionResource) (informers.GenericInformer, error) {
 	return nil, nil
