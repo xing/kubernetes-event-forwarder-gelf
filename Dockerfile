@@ -1,4 +1,4 @@
-FROM golang:1.11.2
+FROM golang:1.16
 COPY . /src/
 WORKDIR /src/
 RUN make clean \
