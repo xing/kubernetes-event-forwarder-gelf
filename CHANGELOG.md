@@ -9,9 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
+## [1.1.0] - 2021-06-10
+### Changed
+- Use go 1.16
+- Update for Kubernetes 1.20
+
 ## [1.0.0] - 2019-01-16
 ### Added
 - Initial release as Open-Source under the Apache License v2.0
 
 [Unreleased]: https://github.com/xing/kubernetes-event-forwarder-gelf/compare/v1.0.0...HEAD
+[1.1.0]: https://github.com/xing/kubernetes-event-forwarder-gelf/compare/v1.1.0...v1.0.0
 [1.0.0]: https://github.com/xing/kubernetes-event-forwarder-gelf/compare/0b7d9ce7a3346572d70f5f1dbc0204cf838aa927...v1.0.0

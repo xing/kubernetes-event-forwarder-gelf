@@ -10,7 +10,7 @@ import (
 )
 
 // VERSION represents the current version of the release.
-const VERSION = "v1.0.0"
+const VERSION = "v1.1.0"
 
 var opts struct {
 	Version     func() `long:"version" description:"Print version information"`
